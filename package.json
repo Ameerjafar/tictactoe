@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "tic-tac-toe",
   "private": true,
   "scripts": {
     "build": "turbo run build",
