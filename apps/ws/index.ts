@@ -1,10 +1,9 @@
 import WebSocket from "ws";
-import { UserManager } from "./userManager";
-import { getJSDocAugmentsTag, getNameOfDeclaration } from "typescript";
+import { GameManager } from "./GameManager";
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
-const userManger = new UserManager();
+const gameManager = new GameManager();
 wss.on("connection", (ws: WebSocket) => {
   console.log("New client connected");
   ws.on("message", (message: string) => {
@@ -20,7 +19,7 @@ wss.on("connection", (ws: WebSocket) => {
         type: objectData.type,
         gameState: objectData.gameState,
       };
-      userManger.addUser(userObject);
+      gameManager.addUser(userObject);
       ws.send(
         `room created successfully with ${userObject.roomId} and admin ${userObject.name}`
       );
@@ -35,23 +34,38 @@ wss.on("connection", (ws: WebSocket) => {
         type: objectData.type,
         gameState: objectData.gameState,
       };
-      userManger.addUser(userObject);
-      const getAllUser: any = userManger.getUserByRoom({
+      gameManager.addUser(userObject);
+      const getAllUser: any = gameManager.getUserByRoom({
         roomId: userObject.roomId,
       });
-      console.log("this is getAllUser", getAllUser)
+      console.log("this is getAllUser", getAllUser);
       if (getAllUser === -1) {
         ws.send("room does not have any member");
       } else {
         getAllUser.forEach((user: any) => {
           console.log(user);
-          if (
-            user.ws !== ws && user.ws.readyState === WebSocket.OPEN
-          ) {
+          if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
             user.ws.send(`${objectData.name} joined the room`);
           }
         });
       }
+    } else if (objectData.type === "updateGameState") {
+      if(!objectData.player) {
+        ws.send("you cannot update the game because you are a spectator.")
+      }
+      const roomId = objectData.roomId;
+      const currentState = objectData.gameState;
+
+      const gameCurrentState = gameManager.updateState({
+        roomId,
+        currentState,
+      });
+      const allUser: any = gameManager.getUserByRoom({ roomId });
+      allUser.forEach((user: any) => {
+        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+          user.ws.send(JSON.stringify(gameCurrentState));
+        }
+      });
     }
     console.log(`Received: ${message}`);
     ws.send(`Server received: ${message}`);

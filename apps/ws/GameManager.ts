@@ -1,8 +1,14 @@
 import WebSocket from "ws";
-type CurrentSymbol = "X" | "O";
+type Turn = "X" | "O";
 interface GameState {
-  currentSymbol: CurrentSymbol;
-  currentState: string;
+  currentTurn: Turn;
+  currentState: [
+    ["", "", ""],
+    ["", "", ""],
+    ["", "", ""]
+  ];
+  winner: null;
+  gameOver: false;
 }
 interface User {
   ws: WebSocket;
@@ -12,9 +18,9 @@ interface User {
   player: boolean;
 }
 
-export class UserManager {
+export class GameManager {
   private rooms!: Map<string, User[]>;
-  private gameState!: Map<string, GameState>
+  private gameState!: Map<string, GameState>;
   constructor() {
     this.rooms = new Map();
     this.gameState = new Map();
@@ -27,7 +33,7 @@ export class UserManager {
     userId,
     player,
     type,
-    gameState
+    gameState,
   }: {
     ws: WebSocket;
     name: string;
@@ -36,14 +42,13 @@ export class UserManager {
     userId: string;
     player: boolean;
     type: string;
-    gameState: GameState
+    gameState: GameState;
   }) => {
     if (type === "joinRoom" && !this.rooms.get(roomId)) {
       console.log("room does not exist");
       return -1;
     }
     const existingUsers = this.rooms.get(roomId) ?? [];
-    // console.log("existingUsers", this.rooms.get(roomId));
     this.rooms.set(roomId, [
       ...existingUsers,
       { ws, name, admin, userId, player },
@@ -65,16 +70,30 @@ export class UserManager {
       this.rooms.set(roomId, removeUser!);
     }
   };
-  updateState = ({ roomId, turn }: { roomId: string; turn: string }) => {
-    const getUser = this.rooms.get(roomId);
-    if (!getUser) {
-      console.log("room does not exist");
-      return -1;
+  updateState = ({
+    roomId,
+    currentState,
+  }: {
+    roomId: string;
+    currentState: any;
+  }) => {
+    let previousTurn = this.gameState.get(roomId)?.currentTurn;
+    let currentTurn: Turn = "X";
+    if (previousTurn === "X") {
+      currentTurn = "O";
+    } else {
+      currentTurn = "X";
     }
-    return getUser;
+    this.gameState.set(roomId, {
+      currentTurn,
+      currentState,
+      winner: null,
+      gameOver: false,
+    });
+    return this.gameState.get(roomId);
   };
   getUserByRoom = ({ roomId }: { roomId: string }) => {
-    console.log(roomId)
+    console.log(roomId);
     const getAllUser = this.rooms.get(roomId);
     if (!getAllUser) {
       console.log("cannot find the room");
@@ -82,5 +101,4 @@ export class UserManager {
     }
     return getAllUser;
   };
-
 }
