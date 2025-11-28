@@ -1,14 +1,7 @@
 import WebSocket from "ws";
 type Turn = "X" | "O";
 interface GameState {
-  currentTurn: Turn;
-  currentState: [
-    ["", "", ""],
-    ["", "", ""],
-    ["", "", ""]
-  ];
-  winner: null;
-  gameOver: false;
+  currentState: ["","","","","","","","",""];
 }
 interface User {
   ws: WebSocket;
@@ -69,28 +62,6 @@ export class GameManager {
     } else {
       this.rooms.set(roomId, removeUser!);
     }
-  };
-  updateState = ({
-    roomId,
-    currentState,
-  }: {
-    roomId: string;
-    currentState: any;
-  }) => {
-    let previousTurn = this.gameState.get(roomId)?.currentTurn;
-    let currentTurn: Turn = "X";
-    if (previousTurn === "X") {
-      currentTurn = "O";
-    } else {
-      currentTurn = "X";
-    }
-    this.gameState.set(roomId, {
-      currentTurn,
-      currentState,
-      winner: null,
-      gameOver: false,
-    });
-    return this.gameState.get(roomId);
   };
   getUserByRoom = ({ roomId }: { roomId: string }) => {
     console.log(roomId);

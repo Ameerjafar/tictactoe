@@ -1,11 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useWebSocketContext } from "../context/WebSocketContext.";
 type ButtonType = "X" | "O";
 export const GameBoard = () => {
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [buttonText, setButtonText] = useState<ButtonType>("X");
   const router = useRouter();
+  const isLocalChange = useRef(false);
+  const { socket, messages, isConnected, sendMessage } = useWebSocketContext();
   const [ele, setEle] = useState<string[]>([
     "",
     "",
@@ -27,7 +30,62 @@ export const GameBoard = () => {
     [0, 4, 8],
     [2, 4, 6],
   ];
+  useEffect(() => {
+    if (isLocalChange.current) {
+      const object = {
+        gameState: ele,
+        type: "updateGameState",
+        roomId: localStorage.getItem("roomId"),
+      };
+      isGameOver();
+      sendMessage(object);
+      isLocalChange.current = false;
+    }
+  }, [ele]);
+
+  useEffect(() => {
+    console.log(messages);
+    if (messages?.gameState) {
+      if (isLocalChange.current) {
+        isGameOver();
+        isLocalChange.current = false;
+        return;
+      }
+      setEle(messages.gameState);
+    }
+  }, [messages]);
+
+  const playSound = (type: "move" | "win") => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    if (type === "move") {
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } else {
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+      oscillator.frequency.linearRampToValueAtTime(659.25, audioContext.currentTime + 0.2);
+      oscillator.frequency.linearRampToValueAtTime(783.99, audioContext.currentTime + 0.4);
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.6);
+    }
+  };
+
   const buttonHandler = (key: number) => {
+    playSound("move");
+    isLocalChange.current = true;
     console.log(ele);
     const updateEle: string[] = [];
     ele.forEach((e, ind) => {
@@ -40,7 +98,6 @@ export const GameBoard = () => {
     setEle(updateEle);
     setButtonText((prev) => (prev === "X" ? "O" : "X"));
   };
-
   const isGameOver = (): boolean => {
     console.log("is game over is calling");
     winningCombination.forEach((eachRow: number[], ind: number) => {
@@ -51,7 +108,9 @@ export const GameBoard = () => {
         ele[eachRow[0]!] === ele[eachRow[1]!] &&
         ele[eachRow[2]!] === ele[eachRow[0]!]
       ) {
-        router.push('/gameover');
+        playSound("win");
+        localStorage.setItem("winnerSymbol", ele[eachRow[0]!]!);
+        router.push("/gameover");
         console.log("return true is calling");
         return true;
       }
@@ -59,18 +118,46 @@ export const GameBoard = () => {
     return false;
   };
   return (
-    <div className="flex flex-wrap ">
-      {elements.map((element, index) => (
-        <div key={index} className="w-1/3 p-2">
-          <button
-            onClick={() => buttonHandler(index)}
-            className={`bg-red-500 text-white w-10 h-10 disabled:cursor-not-allowed`}
-            disabled={ele[index] !== ""}
-          >
-            {ele[index] !== "" ? ele[index] : null}
-          </button>
+    <div className="flex flex-col items-center justify-center p-4">
+      <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-2xl border border-white/20">
+        <div className="grid grid-cols-3 gap-3">
+          {elements.map((element, index) => (
+            <div key={index} className="relative">
+              <button
+                onClick={() => buttonHandler(index)}
+                className={`
+                  w-24 h-24 sm:w-32 sm:h-32 rounded-lg text-4xl sm:text-6xl font-bold transition-all duration-300 ease-in-out
+                  flex items-center justify-center shadow-md
+                  ${
+                    ele[index] === ""
+                      ? "bg-white/5 hover:bg-white/20 cursor-pointer hover:scale-105"
+                      : "cursor-not-allowed"
+                  }
+                  ${
+                    ele[index] === "X"
+                      ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                      : ""
+                  }
+                  ${
+                    ele[index] === "O"
+                      ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                      : ""
+                  }
+                `}
+                disabled={ele[index] !== ""}
+              >
+                <span
+                  className={`transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                    ele[index] ? "scale-100 opacity-100 rotate-0" : "scale-0 opacity-0 rotate-180"
+                  }`}
+                >
+                  {ele[index]}
+                </span>
+              </button>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 };

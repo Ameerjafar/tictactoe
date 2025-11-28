@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { GameManager } from "./GameManager";
+import { useDeferredValue } from "react";
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -21,7 +22,7 @@ wss.on("connection", (ws: WebSocket) => {
       };
       gameManager.addUser(userObject);
       ws.send(
-        `room created successfully with ${userObject.roomId} and admin ${userObject.name}`
+        JSON.stringify(`room created successfully with ${userObject.roomId} and admin ${userObject.name}`)
       );
     } else if (objectData.type === "joinRoom") {
       const userObject = {
@@ -40,35 +41,38 @@ wss.on("connection", (ws: WebSocket) => {
       });
       console.log("this is getAllUser", getAllUser);
       if (getAllUser === -1) {
-        ws.send("room does not have any member");
+        ws.send(JSON.stringify("room does not have any member"));
       } else {
         getAllUser.forEach((user: any) => {
           console.log(user);
           if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-            user.ws.send(`${objectData.name} joined the room`);
+            user.ws.send(JSON.stringify(`${objectData.name} joined the room`));
           }
         });
       }
     } else if (objectData.type === "updateGameState") {
-      if(!objectData.player) {
-        ws.send("you cannot update the game because you are a spectator.")
-      }
+      console.log("inside the update game state");
       const roomId = objectData.roomId;
       const currentState = objectData.gameState;
-
-      const gameCurrentState = gameManager.updateState({
-        roomId,
-        currentState,
-      });
+      if(!roomId) {
+        ws.send(JSON.stringify("we cannot find the roomId"));
+      }
+      if(!objectData.player) {
+        ws.send(JSON.stringify("you cannot update the game because you are a spectator."));
+      }
+      // const gameCurrentState = gameManager.updateState({
+      //   roomId,
+      //   currentState,
+      // }); 
       const allUser: any = gameManager.getUserByRoom({ roomId });
       allUser.forEach((user: any) => {
         if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-          user.ws.send(JSON.stringify(gameCurrentState));
+          user.ws.send(JSON.stringify(objectData));
         }
       });
     }
     console.log(`Received: ${message}`);
-    ws.send(`Server received: ${message}`);
+    ws.send(JSON.stringify(objectData));
   });
   ws.on("close", () => {
     console.log("Client disconnected");
@@ -76,7 +80,7 @@ wss.on("connection", (ws: WebSocket) => {
   ws.on("error", (err: unknown) => {
     console.error("WebSocket error:", err);
   });
-  ws.send("Welcome to WebSocket server!");
+  ws.send(JSON.stringify("Welcome to WebSocket server!"));
 });
 
 console.log(`WebSocket server is running on ws://localhost:${PORT}`);

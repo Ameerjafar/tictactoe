@@ -46,7 +46,7 @@ export const signupController = async (req: Request, res: Response) => {
     });
 
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user.id, name: user.name, email: user.email },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "1h" }
     );
@@ -86,7 +86,7 @@ export const signinController = async (req: Request, res: Response) => {
       return;
     }
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: user.id, name: user.name, email: user.email },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "1h" }
     );
