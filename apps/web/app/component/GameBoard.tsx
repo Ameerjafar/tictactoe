@@ -2,12 +2,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext.";
+import { setServers } from "dns";
 type ButtonType = "X" | "O";
 export const GameBoard = () => {
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [buttonText, setButtonText] = useState<ButtonType>("X");
   const router = useRouter();
   const isLocalChange = useRef(false);
+  const [ turn, setTurn ] = useState<boolean>(true);
+  const [roundNumber, setRoundNumber] = useState(1);
   const { socket, messages, isConnected, sendMessage } = useWebSocketContext();
   const [ele, setEle] = useState<string[]>([
     "",
@@ -32,21 +35,23 @@ export const GameBoard = () => {
   ];
   useEffect(() => {
     if (isLocalChange.current) {
+
       const object = {
         gameState: ele,
         type: "updateGameState",
         roomId: localStorage.getItem("roomId"),
+        symbol: buttonText
       };
       isGameOver();
       sendMessage(object);
       isLocalChange.current = false;
     }
   }, [ele]);
-
   useEffect(() => {
     console.log(messages);
     if (messages?.gameState) {
       if (isLocalChange.current) {
+        const symbol = messages.symbol;
         isGameOver();
         isLocalChange.current = false;
         return;
@@ -54,7 +59,24 @@ export const GameBoard = () => {
       setEle(messages.gameState);
     }
   }, [messages]);
-
+  useEffect(() => {
+    const symbol = messages.symbol;
+    if(symbol === "X") {
+      setButtonText("O");
+    }
+    else {
+      setButtonText("X");
+    }
+  }, [messages]);
+  useEffect(() => {
+    const symbol = localStorage.getItem("symbol");
+    if(symbol === buttonText) {
+      setTurn(true);
+    }
+    else {
+      setTurn(false);
+    }
+  }, [setButtonText]);
   const playSound = (type: "move" | "win") => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -84,19 +106,23 @@ export const GameBoard = () => {
   };
 
   const buttonHandler = (key: number) => {
-    playSound("move");
+    if(localStorage.getItem("symbol") !== buttonText) {
+      console.log("Not your turn!");
+      return;
+    }
     isLocalChange.current = true;
+    playSound("move");
     console.log(ele);
     const updateEle: string[] = [];
     ele.forEach((e, ind) => {
-      if (key === ind) {
+      if (key === ind && ele[ind] === "") {
         updateEle[ind] = buttonText;
       } else {
         updateEle[ind] = ele[ind]!;
       }
     });
     setEle(updateEle);
-    setButtonText((prev) => (prev === "X" ? "O" : "X"));
+    // setButtonText((prev) => (prev === "X" ? "O" : "X"));
   };
   const isGameOver = (): boolean => {
     console.log("is game over is calling");
@@ -117,6 +143,7 @@ export const GameBoard = () => {
     });
     return false;
   };
+
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-2xl border border-white/20">
@@ -144,7 +171,7 @@ export const GameBoard = () => {
                       : ""
                   }
                 `}
-                disabled={ele[index] !== ""}
+                disabled={ele[index] !== "" && turn}
               >
                 <span
                   className={`transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${

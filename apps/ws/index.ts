@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import { GameManager } from "./GameManager";
-import { useDeferredValue } from "react";
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -33,7 +32,7 @@ wss.on("connection", (ws: WebSocket) => {
         userId: objectData.userId,
         player: objectData.player,
         type: objectData.type,
-        gameState: objectData.gameState,
+        gameState: objectData.symbol,
       };
       gameManager.addUser(userObject);
       const getAllUser: any = gameManager.getUserByRoom({
@@ -60,10 +59,6 @@ wss.on("connection", (ws: WebSocket) => {
       if(!objectData.player) {
         ws.send(JSON.stringify("you cannot update the game because you are a spectator."));
       }
-      // const gameCurrentState = gameManager.updateState({
-      //   roomId,
-      //   currentState,
-      // }); 
       const allUser: any = gameManager.getUserByRoom({ roomId });
       allUser.forEach((user: any) => {
         if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {

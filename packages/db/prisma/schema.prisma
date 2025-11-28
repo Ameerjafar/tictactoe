@@ -18,4 +18,7 @@ model User {
   name     String
   email    String @unique
   password String
+  totalMatchesPlayed Int @default(0)
+  totalMatchesWon Int @default(0)
+  totalMatchesLost Int @default(0)
 }

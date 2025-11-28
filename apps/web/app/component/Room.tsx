@@ -24,6 +24,8 @@ export const Room = () => {
         gameState: ["", "", "", "", "", "", "", "", ""],
       };
       localStorage.setItem("roomId", createRoomId.toString());
+      localStorage.setItem("symbol", "X");
+      localStorage.setItem("currentRound", "1");
       router.push('/game');
       sendMessage(data)
       
@@ -41,7 +43,11 @@ export const Room = () => {
       roomId: roomId.toString(),
       gameState: ["", "", "", "", "", "", "", "", ""],
     };
+
     localStorage.setItem("roomId", roomId);
+    localStorage.setItem("symbol", "O");
+    localStorage.setItem("currentRound", "1");
+    localStorage.setItem("checking purpose", "212e32");
     router.push('/game')
     sendMessage(data);
   };

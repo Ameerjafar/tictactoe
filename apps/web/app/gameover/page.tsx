@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useWebSocketContext } from "../context/WebSocketContext.";
 
 export default function GameOver() {
   const [winner, setWinner] = useState<string | null>(null);
+  const { sendMessage } = useWebSocketContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -13,8 +15,15 @@ export default function GameOver() {
 
   const handlePlayAgain = () => {
     localStorage.removeItem("winnerSymbol");
-    // Optionally clear game state if needed, but for now just go back to room
-    router.push("/room");
+    const nextRound = parseInt(localStorage.getItem("currentRound")!) + 1;
+    localStorage.setItem("currentRound", nextRound.toString());
+    router.push("/game");
+    const object = {
+      gameState: ["", "", "", "", "", "", "", "", ""],
+      type: "updateGameState",
+      roomId: localStorage.getItem("roomId"),
+    };
+    sendMessage(object);
   };
 
   return (

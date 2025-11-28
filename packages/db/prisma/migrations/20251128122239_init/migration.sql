@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "totalMatchesLost" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "totalMatchesPlayed" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "totalMatchesWon" INTEGER NOT NULL DEFAULT 0;
