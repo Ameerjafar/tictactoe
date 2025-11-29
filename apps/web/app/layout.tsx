@@ -1,8 +1,10 @@
 
-import { WebSocketProvider } from "./context/WebSocketContext.";
+
+import { WebSocketProvider } from "./context/WebSocketContext";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ButtonTextProvider } from "./context/ButtonTextContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,9 +26,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen text-white`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-gradient-to-br from-gray-900 via-slate-900 to-black min-h-screen text-white`}
+      >
         <WebSocketProvider>
-          {children}
+          <ButtonTextProvider>
+            { children }
+          </ButtonTextProvider>
         </WebSocketProvider>
       </body>
     </html>

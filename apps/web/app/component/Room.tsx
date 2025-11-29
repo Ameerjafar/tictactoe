@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useWebSocketContext } from "../context/WebSocketContext.";
+import { useWebSocketContext } from "../context/WebSocketContext";
+import { useButtonText } from "../context/ButtonTextContext";
+
 export const Room = () => {
   const { sendMessage } = useWebSocketContext();
+  const { setButtonText } = useButtonText();
   const [roomId, setRoomId] = useState<string>("");
   const router = useRouter();
 
@@ -24,7 +27,7 @@ export const Room = () => {
         gameState: ["", "", "", "", "", "", "", "", ""],
       };
       localStorage.setItem("roomId", createRoomId.toString());
-      localStorage.setItem("symbol", "X");
+      setButtonText("X"); // Use context instead of localStorage
       localStorage.setItem("currentRound", "1");
       router.push('/game');
       sendMessage(data)
@@ -45,9 +48,8 @@ export const Room = () => {
     };
 
     localStorage.setItem("roomId", roomId);
-    localStorage.setItem("symbol", "O");
+    setButtonText("O"); // Use context instead of localStorage
     localStorage.setItem("currentRound", "1");
-    localStorage.setItem("checking purpose", "212e32");
     router.push('/game')
     sendMessage(data);
   };

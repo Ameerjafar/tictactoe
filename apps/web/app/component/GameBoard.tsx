@@ -1,17 +1,15 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useWebSocketContext } from "../context/WebSocketContext.";
-import { setServers } from "dns";
+import { useWebSocketContext } from "../context/WebSocketContext";
 type ButtonType = "X" | "O";
-export const GameBoard = () => {
+export const GameBoard = () => {  
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [buttonText, setButtonText] = useState<ButtonType>("X");
   const router = useRouter();
   const isLocalChange = useRef(false);
   const [ turn, setTurn ] = useState<boolean>(true);
-  const [roundNumber, setRoundNumber] = useState(1);
-  const { socket, messages, isConnected, sendMessage } = useWebSocketContext();
+  const { messages, sendMessage } = useWebSocketContext();
   const [ele, setEle] = useState<string[]>([
     "",
     "",
@@ -34,15 +32,31 @@ export const GameBoard = () => {
     [2, 4, 6],
   ];
   useEffect(() => {
+    const symbol = localStorage.getItem("symbol");
+    const round = localStorage.getItem("currentRound"); 
+    console.log("turn inside the button text", buttonText)
+    console.log("turn", turn);
+    if((parseInt(round!) & 1) === 1 && symbol === "X") {
+      setTurn(true);
+    }
+    else {
+      setTurn(false);
+    }
+  }, [])
+  useEffect(() => {
+    const gameOver = isGameOver();
+    console.log("game over ", gameOver)
     if (isLocalChange.current) {
-
       const object = {
         gameState: ele,
         type: "updateGameState",
         roomId: localStorage.getItem("roomId"),
-        symbol: buttonText
+        symbol: buttonText,
+        gameOver
       };
-      isGameOver();
+      if(gameOver) {
+        router.push('/gameover')
+      }
       sendMessage(object);
       isLocalChange.current = false;
     }
@@ -50,13 +64,10 @@ export const GameBoard = () => {
   useEffect(() => {
     console.log(messages);
     if (messages?.gameState) {
-      if (isLocalChange.current) {
-        const symbol = messages.symbol;
-        isGameOver();
-        isLocalChange.current = false;
-        return;
-      }
       setEle(messages.gameState);
+    }
+    if(messages === 'game is over') {
+      router.push('/gameover');
     }
   }, [messages]);
   useEffect(() => {
@@ -126,7 +137,7 @@ export const GameBoard = () => {
   };
   const isGameOver = (): boolean => {
     console.log("is game over is calling");
-    winningCombination.forEach((eachRow: number[], ind: number) => {
+    const isWon = winningCombination.some((eachRow: number[], ind: number) => {
       if (
         ele[eachRow[0]!] !== "" &&
         ele[eachRow[1]!] !== "" &&
@@ -136,12 +147,11 @@ export const GameBoard = () => {
       ) {
         playSound("win");
         localStorage.setItem("winnerSymbol", ele[eachRow[0]!]!);
-        router.push("/gameover");
         console.log("return true is calling");
         return true;
       }
     });
-    return false;
+    return isWon;
   };
 
   return (
