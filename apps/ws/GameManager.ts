@@ -8,7 +8,6 @@ interface User {
   name: string;
   admin: boolean;
   userId: string;
-  player: boolean;
 }
 
 export class GameManager {
@@ -24,7 +23,6 @@ export class GameManager {
     roomId,
     admin,
     userId,
-    player,
     type,
     gameState,
   }: {
@@ -33,7 +31,6 @@ export class GameManager {
     roomId: string;
     admin: boolean;
     userId: string;
-    player: boolean;
     type: string;
     gameState: GameState;
   }) => {
@@ -44,7 +41,7 @@ export class GameManager {
     const existingUsers = this.rooms.get(roomId) ?? [];
     this.rooms.set(roomId, [
       ...existingUsers,
-      { ws, name, admin, userId, player },
+      { ws, name, admin, userId },
     ]);
     this.gameState.set(roomId, gameState);
     console.log("hello this is from the room", this.rooms);

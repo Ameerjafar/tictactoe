@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import { GameManager } from "./GameManager";
+import { symbolName } from "typescript";
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -15,9 +16,9 @@ wss.on("connection", (ws: WebSocket) => {
         roomId: objectData.roomId,
         admin: objectData.admin,
         userId: objectData.userId,
-        player: objectData.player,
         type: objectData.type,
         gameState: objectData.gameState,
+        symbol: objectData.symbol,
       };
       gameManager.addUser(userObject);
       ws.send(
@@ -52,7 +53,6 @@ wss.on("connection", (ws: WebSocket) => {
         roomId: objectData.roomId,
         admin: objectData.admin,
         userId: objectData.userId,
-        player: objectData.player,
         type: objectData.type,
         gameState: objectData.symbol,
       };
@@ -74,23 +74,25 @@ wss.on("connection", (ws: WebSocket) => {
     } else if (objectData.type === "updateGameState") {
       console.log("inside the update game state");
       const roomId = objectData.roomId;
-      const currentState = objectData.gameState;
       if (!roomId) {
         ws.send(JSON.stringify("we cannot find the roomId"));
       }
-      if (!objectData.player) {
-        ws.send(
-          JSON.stringify(
-            "you cannot update the game because you are a spectator."
-          )
-        );
-      }
-      const allUser: any = gameManager.getUserByRoom({ roomId });
+      // else if (!objectData.player) {
+      //   ws.send(
+      //     JSON.stringify(
+      //       "spectator"
+      //     )
+      //   );
+
+      // }
+      else {
+        const allUser: any = gameManager.getUserByRoom({ roomId });
       allUser.forEach((user: any) => {
         if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
           user.ws.send(JSON.stringify(objectData));
         }
       });
+      }
     }
     if (objectData.gameOver === true) {
       console.log("backend game over", objectData.gameOver);

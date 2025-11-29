@@ -1,6 +1,7 @@
 
 
 import { WebSocketProvider } from "./context/WebSocketContext";
+import { ToastProvider } from "./providers/ToastProvider";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -31,7 +32,9 @@ export default function RootLayout({
       >
         <WebSocketProvider>
           <ButtonTextProvider>
-            { children }
+            <ToastProvider>
+              { children }
+            </ToastProvider>
           </ButtonTextProvider>
         </WebSocketProvider>
       </body>

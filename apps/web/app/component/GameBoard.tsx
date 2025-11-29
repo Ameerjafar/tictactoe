@@ -2,14 +2,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext";
+import { toast } from "sonner";
 type ButtonType = "X" | "O";
 export const GameBoard = () => {  
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [buttonText, setButtonText] = useState<ButtonType>("X");
   const router = useRouter();
-  const isLocalChange = useRef(false);
   const [ turn, setTurn ] = useState<boolean>(true);
   const { messages, sendMessage } = useWebSocketContext();
+  const symbol = localStorage.getItem("symbol");
   const [ele, setEle] = useState<string[]>([
     "",
     "",
@@ -32,7 +33,6 @@ export const GameBoard = () => {
     [2, 4, 6],
   ];
   useEffect(() => {
-    const symbol = localStorage.getItem("symbol");
     const round = localStorage.getItem("currentRound"); 
     console.log("turn inside the button text", buttonText)
     console.log("turn", turn);
@@ -44,50 +44,13 @@ export const GameBoard = () => {
     }
   }, [])
   useEffect(() => {
-    const gameOver = isGameOver();
-    console.log("game over ", gameOver)
-    if (isLocalChange.current) {
-      const object = {
-        gameState: ele,
-        type: "updateGameState",
-        roomId: localStorage.getItem("roomId"),
-        symbol: buttonText,
-        gameOver
-      };
-      if(gameOver) {
-        router.push('/gameover')
-      }
-      sendMessage(object);
-      isLocalChange.current = false;
-    }
-  }, [ele]);
-  useEffect(() => {
-    console.log(messages);
-    if (messages?.gameState) {
+    if(messages.type === 'updateGameState' && messages.gameState) {
       setEle(messages.gameState);
-    }
-    if(messages === 'game is over') {
-      router.push('/gameover');
-    }
-  }, [messages]);
-  useEffect(() => {
-    const symbol = messages.symbol;
-    if(symbol === "X") {
-      setButtonText("O");
-    }
-    else {
-      setButtonText("X");
+      if(messages.symbol != "") {
+        setButtonText((prev) => (prev === "X" ? "O" : "X"));
+      }
     }
   }, [messages]);
-  useEffect(() => {
-    const symbol = localStorage.getItem("symbol");
-    if(symbol === buttonText) {
-      setTurn(true);
-    }
-    else {
-      setTurn(false);
-    }
-  }, [setButtonText]);
   const playSound = (type: "move" | "win") => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -115,13 +78,22 @@ export const GameBoard = () => {
       oscillator.stop(audioContext.currentTime + 0.6);
     }
   };
-
+  useEffect(() => {
+    const gameOver = isGameOver();
+    if(gameOver) {
+      router.push('/gameover');
+    }
+  }, [ele])
   const buttonHandler = (key: number) => {
-    if(localStorage.getItem("symbol") !== buttonText) {
-      console.log("Not your turn!");
+    console.log("buttonText", buttonText);
+    if(localStorage.getItem("spectator") === "true") {
+      toast.info("You are in spectator mode");
       return;
     }
-    isLocalChange.current = true;
+    if(symbol && symbol !== buttonText) {
+      toast.info("Not your turn!");
+      return;
+    }
     playSound("move");
     console.log(ele);
     const updateEle: string[] = [];
@@ -132,8 +104,19 @@ export const GameBoard = () => {
         updateEle[ind] = ele[ind]!;
       }
     });
+
     setEle(updateEle);
-    // setButtonText((prev) => (prev === "X" ? "O" : "X"));
+    console.log("what is wrong in this one", updateEle);
+    const gameOver = isGameOver();
+    const object = {
+        gameState: updateEle,
+        type: "updateGameState",
+        roomId: localStorage.getItem("roomId"),
+        symbol,
+        gameOver,
+      };
+    sendMessage(object);
+    setButtonText((prev) => (prev === "X" ? "O" : "X"));
   };
   const isGameOver = (): boolean => {
     console.log("is game over is calling");
@@ -181,7 +164,7 @@ export const GameBoard = () => {
                       : ""
                   }
                 `}
-                disabled={ele[index] !== "" && turn}
+                disabled={ele[index] !== "" && symbol === buttonText }
               >
                 <span
                   className={`transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${

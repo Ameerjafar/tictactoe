@@ -1,21 +1,49 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { GameBoard } from "../component/GameBoard";
 import { Chat } from "../component/Chat";
 
 export default function GamePage() {
   const router = useRouter();
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   useEffect(() => {
-    const roomId = localStorage.getItem("roomId");
-    if (!roomId) {
+    const storedRoomId = localStorage.getItem("roomId");
+    if (!storedRoomId) {
       router.push("/room");
+    } else {
+      setRoomId(storedRoomId);
     }
   }, [router]);
 
+  const copyRoomId = () => {
+    if (roomId) {
+      navigator.clipboard.writeText(roomId);
+      toast.success("Room ID copied to clipboard");
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+      {roomId && (
+        <div className="absolute top-4 right-4 z-50">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-2 flex items-center gap-3 shadow-lg">
+            <span className="text-gray-400 text-sm font-medium">Room ID:</span>
+            <span className="text-white font-mono font-bold tracking-wider">{roomId}</span>
+            <button 
+              onClick={copyRoomId}
+              className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-gray-400 hover:text-white group"
+              title="Copy Room ID"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       <div>
         <Chat />
       </div>
