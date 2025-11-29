@@ -14,11 +14,26 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
-  totalMatchesPlayed Int @default(0)
-  totalMatchesWon Int @default(0)
-  totalMatchesLost Int @default(0)
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  totalGames Int      @default(0)
+  wins       Int      @default(0)
+  losses     Int      @default(0)
+  draws      Int      @default(0)
+  games      Game[]
+  createdAt  DateTime @default(now())
+}
+
+model Game {
+  id            String   @id @default(uuid())
+  roomId        String   @unique
+  player1       String
+  player2       String
+  userId        String
+  totalRounds   Int
+  roomWinner String
+  user          User     @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
 }

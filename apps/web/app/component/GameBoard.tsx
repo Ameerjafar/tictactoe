@@ -44,12 +44,18 @@ export const GameBoard = () => {
     }
   }, [])
   useEffect(() => {
-    if(messages.type === 'updateGameState' && messages.gameState) {
+    if(messages.type === 'fewerPlayer') {
+
+      console.log("this is not working good");
+      toast.info("We need two Player to start this game");
+    }
+    else if(messages.type === 'updateGameState' && messages.gameState) {
       setEle(messages.gameState);
       if(messages.symbol != "") {
         setButtonText((prev) => (prev === "X" ? "O" : "X"));
       }
     }
+
   }, [messages]);
   const playSound = (type: "move" | "win") => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -85,7 +91,7 @@ export const GameBoard = () => {
     }
   }, [ele])
   const buttonHandler = (key: number) => {
-    console.log("buttonText", buttonText);
+    
     if(localStorage.getItem("spectator") === "true") {
       toast.info("You are in spectator mode");
       return;
@@ -108,12 +114,17 @@ export const GameBoard = () => {
     setEle(updateEle);
     console.log("what is wrong in this one", updateEle);
     const gameOver = isGameOver();
+    let player = false;
+    if(localStorage.getItem("spectator") !== "true") {
+      player = true;
+    }
     const object = {
         gameState: updateEle,
         type: "updateGameState",
         roomId: localStorage.getItem("roomId"),
         symbol,
         gameOver,
+        player
       };
     sendMessage(object);
     setButtonText((prev) => (prev === "X" ? "O" : "X"));

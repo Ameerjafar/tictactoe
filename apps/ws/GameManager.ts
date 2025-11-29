@@ -8,6 +8,7 @@ interface User {
   name: string;
   admin: boolean;
   userId: string;
+  player: boolean
 }
 
 export class GameManager {
@@ -25,6 +26,7 @@ export class GameManager {
     userId,
     type,
     gameState,
+    player
   }: {
     ws: WebSocket;
     name: string;
@@ -33,6 +35,7 @@ export class GameManager {
     userId: string;
     type: string;
     gameState: GameState;
+    player: boolean
   }) => {
     if (type === "joinRoom" && !this.rooms.get(roomId)) {
       console.log("room does not exist");
@@ -41,7 +44,7 @@ export class GameManager {
     const existingUsers = this.rooms.get(roomId) ?? [];
     this.rooms.set(roomId, [
       ...existingUsers,
-      { ws, name, admin, userId },
+      { ws, name, admin, userId, player },
     ]);
     this.gameState.set(roomId, gameState);
     console.log("hello this is from the room", this.rooms);

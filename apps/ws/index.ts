@@ -18,6 +18,7 @@ wss.on("connection", (ws: WebSocket) => {
         type: objectData.type,
         gameState: objectData.gameState,
         symbol: objectData.symbol,
+        player: objectData.player
       };
       gameManager.addUser(userObject);
       ws.send(
@@ -54,6 +55,7 @@ wss.on("connection", (ws: WebSocket) => {
         userId: objectData.userId,
         type: objectData.type,
         gameState: objectData.symbol,
+        player: objectData.player
       };
       gameManager.addUser(userObject);
       const getAllUser: any = gameManager.getUserByRoom({
@@ -86,11 +88,29 @@ wss.on("connection", (ws: WebSocket) => {
       // }
       else {
         const allUser: any = gameManager.getUserByRoom({ roomId });
-      allUser.forEach((user: any) => {
-        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-          user.ws.send(JSON.stringify(objectData));
+        let totalPlayers = 0;
+        allUser.forEach((user: any) => {
+          if(user.player) {
+            totalPlayers++;
+          }
+        })
+        if(totalPlayers === 2) {
+          allUser.forEach((user: any) => {
+          if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+            user.ws.send(JSON.stringify(objectData));
+          }
+        });
         }
-      });
+        else {
+          allUser.forEach((user: any) => {
+            console.log("Inside the fewer player");
+              const fewerPlayer = {
+                type: "fewerPlayer",
+                roomId: user.roomId
+              }      
+              user.ws.send(JSON.stringify(fewerPlayer));
+          })
+        }
       }
     } else if (objectData.type === "restartGame") {
       console.log("Admin restarting game");
