@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import { GameManager } from "./GameManager";
-import { symbolName } from "typescript";
 
 const PORT = 8080;
 const wss = new WebSocket.Server({ port: PORT });
@@ -92,6 +91,19 @@ wss.on("connection", (ws: WebSocket) => {
           user.ws.send(JSON.stringify(objectData));
         }
       });
+      }
+    } else if (objectData.type === "restartGame") {
+      console.log("Admin restarting game");
+      const roomId = objectData.roomId;
+      if (!roomId) {
+        ws.send(JSON.stringify("we cannot find the roomId"));
+      } else {
+        const allUser: any = gameManager.getUserByRoom({ roomId });
+        allUser.forEach((user: any) => {
+          if (user.ws.readyState === WebSocket.OPEN) {
+            user.ws.send(JSON.stringify(objectData));
+          }
+        });
       }
     }
     if (objectData.gameOver === true) {

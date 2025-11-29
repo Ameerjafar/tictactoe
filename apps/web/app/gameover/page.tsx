@@ -5,34 +5,56 @@ import { useWebSocketContext } from "../context/WebSocketContext";
 import { useButtonText } from "../context/ButtonTextContext";
 export default function GameOver() {
   const [winner, setWinner] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { buttonText, setButtonText } = useButtonText();
-  const { sendMessage } = useWebSocketContext();
+  const { sendMessage, messages } = useWebSocketContext();
   const router = useRouter();
 
   useEffect(() => {
     const storedWinner = localStorage.getItem("winnerSymbol");
+    const adminStatus = localStorage.getItem("isAdmin") === "true";
     setWinner(storedWinner);
+    setIsAdmin(adminStatus);
   }, []);
+
+  useEffect(() => {
+      if (messages?.type === "restartGame") {
+      localStorage.removeItem("winnerSymbol");
+      const symbol: any = localStorage.getItem("symbol");
+      if (symbol === "X") {
+        localStorage.setItem("symbol", "O");
+      } else if (symbol === "O") {
+        localStorage.setItem("symbol", "X");
+      }
+      setButtonText("X");
+      router.push("/game");
+    }
+  }, [messages, router, setButtonText]);
 
   const handlePlayAgain = () => {
     localStorage.removeItem("winnerSymbol");
+    
     const symbol: any = localStorage.getItem("symbol");
-      if(symbol === "X") {
-        localStorage.setItem("symbol", "O");
-      }
-      else {
-        localStorage.setItem("symbol", "X");
-      }
-      setButtonText("X")
-    // localStorage.setItem("currentRound", nextRound.toString());
-    const object = {
+    if (symbol === "X") {
+      localStorage.setItem("symbol", "O");
+    } else if (symbol === "O") {
+      localStorage.setItem("symbol", "X");
+    }
+    setButtonText("X");
+    const restartObject = {
+      type: "restartGame",
+      roomId: localStorage.getItem("roomId"),
+    };
+    sendMessage(restartObject);
+    const gameStateObject = {
       gameState: ["", "", "", "", "", "", "", "", ""],
       type: "updateGameState",
       roomId: localStorage.getItem("roomId"),
       symbol: ""
     }; 
-    sendMessage(object);
-     router.push("/game");
+    sendMessage(gameStateObject);
+    
+    router.push("/game");
   }; 
 
   return (
@@ -61,12 +83,18 @@ export default function GameOver() {
           </div>
         )}
 
-        <button
-          onClick={handlePlayAgain}
-          className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold rounded-lg transition-all shadow-lg shadow-purple-500/30 transform hover:-translate-y-1"
-        >
-          { localStorage.getItem("spectator") === "true" ? "See the match again" : "Play Again"}
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={handlePlayAgain}
+            className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold rounded-lg transition-all shadow-lg shadow-purple-500/30 transform hover:-translate-y-1"
+          >
+            Start New Game
+          </button>
+        ) : (
+          <div className="w-full py-4 bg-gray-700/50 text-gray-400 font-bold rounded-lg border border-gray-600/50">
+            Waiting for admin to start new game...
+          </div>
+        )}
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ export const Room = () => {
     }
     localStorage.setItem("currentRound", "1");
     localStorage.setItem("spectator", spectator.toString());
+    localStorage.setItem("isAdmin", "true");
     router.push("/game");
     sendMessage(data);
   };
