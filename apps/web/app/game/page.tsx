@@ -12,12 +12,12 @@ export default function GamePage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedRoomId = localStorage.getItem("roomId");
-    
+
     if (!token) {
       router.push("/signin");
       return;
     }
-    
+
     if (!storedRoomId) {
       router.push("/room");
     } else {
@@ -39,7 +39,7 @@ export default function GamePage() {
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-4 py-2 flex items-center gap-3 shadow-lg">
             <span className="text-gray-400 text-sm font-medium">Room ID:</span>
             <span className="text-white font-mono font-bold tracking-wider">{roomId}</span>
-            <button 
+            <button
               onClick={copyRoomId}
               className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-gray-400 hover:text-white group"
               title="Copy Room ID"

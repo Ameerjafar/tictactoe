@@ -88,7 +88,7 @@ wss.on("connection", (ws: WebSocket) => {
       }
       const allUser: any = gameManager.getUserByRoom({ roomId });
       allUser.forEach((user: any) => {
-        if (user.ws.readyState === WebSocket.OPEN) {
+        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
           user.ws.send(JSON.stringify(objectData));
         }
       });

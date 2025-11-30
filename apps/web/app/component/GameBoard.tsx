@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import { toast } from "sonner";
-import { measureMemory } from "vm";
+
 type ButtonType = "X" | "O";
 export const GameBoard = () => {
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -82,7 +82,7 @@ export const GameBoard = () => {
       oscillator.start();
       oscillator.stop(audioContext.currentTime + 0.6);
     } else {
-      // Draw sound - a descending tone sequence
+
       oscillator.type = "sawtooth";
       oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
       oscillator.frequency.linearRampToValueAtTime(300, audioContext.currentTime + 0.2);
@@ -140,7 +140,9 @@ export const GameBoard = () => {
       player
     };
     sendMessage(object);
+    console.log("buttonText", buttonText)
     setButtonText((prev) => (prev === "X" ? "O" : "X"));
+
   };
   const isGameOver = (): boolean => {
     console.log("is game over is calling");

@@ -2,11 +2,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "../context/WebSocketContext";
-import { useButtonText } from "../context/ButtonTextContext";
 
 export const Room = () => {
-  const { messages, sendMessage } = useWebSocketContext();
-  const { setButtonText } = useButtonText();
+  const { sendMessage } = useWebSocketContext();
   const [roomId, setRoomId] = useState<string>("");
   const [spectator, setSpectator] = useState(false);
   const router = useRouter();
@@ -59,7 +57,6 @@ export const Room = () => {
     if (!spectator) {
       localStorage.setItem("symbol", "O");
     }
-    localStorage.setItem("currentRound", "1");
     localStorage.setItem("spectator", spectator.toString());
     localStorage.setItem("isAdmin", "false");
     router.push("/game");
