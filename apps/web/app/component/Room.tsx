@@ -27,8 +27,8 @@ export const Room = () => {
       gameState: ["", "", "", "", "", "", "", "", ""],
     };
     localStorage.setItem("roomId", createRoomId.toString());
-    setButtonText("X"); 
-    if(!spectator) {
+    // setButtonText("X");
+    if (!spectator) {
       localStorage.setItem("symbol", "X");
     }
     localStorage.setItem("currentRound", "1");
@@ -53,12 +53,13 @@ export const Room = () => {
     };
 
     localStorage.setItem("roomId", roomId.toString());
-    setButtonText("O");
-    if(!spectator) {
+    // setButtonText("O");
+    if (!spectator) {
       localStorage.setItem("symbol", "O");
     }
     localStorage.setItem("currentRound", "1");
     localStorage.setItem("spectator", spectator.toString());
+    localStorage.setItem("isAdmin", "false");
     router.push("/game");
     sendMessage(data);
   };
@@ -70,7 +71,6 @@ export const Room = () => {
           <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-8 tracking-tight">
             GAME ROOM
           </h2>
-
           <button
             onClick={createRoomHandler}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-blue-500/20 mb-8 flex items-center justify-center gap-2 group"
@@ -94,7 +94,7 @@ export const Room = () => {
                 className="w-full px-6 py-4 bg-black/30 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 text-white placeholder-gray-600 text-center text-xl tracking-widest transition-all"
               />
             </div>
-            
+
             <button
               onClick={joinRoomHandler}
               disabled={!roomId}
@@ -107,25 +107,25 @@ export const Room = () => {
           <div className="mt-8 flex items-center justify-center gap-6 p-4 bg-white/5 rounded-xl border border-white/5">
             <label className="flex items-center gap-3 cursor-pointer group">
               <div className="relative flex items-center">
-                <input 
-                  type="radio" 
-                  name="role" 
-                  className="peer sr-only" 
-                  onChange={() => setSpectator(false)} 
-                  defaultChecked 
+                <input
+                  type="radio"
+                  name="role"
+                  className="peer sr-only"
+                  onChange={() => setSpectator(false)}
+                  defaultChecked
                 />
                 <div className="w-5 h-5 border-2 border-gray-500 rounded-full peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all"></div>
               </div>
               <span className="text-gray-400 group-hover:text-white transition-colors">Player</span>
             </label>
-            
+
             <label className="flex items-center gap-3 cursor-pointer group">
               <div className="relative flex items-center">
-                <input 
-                  type="radio" 
-                  name="role" 
-                  className="peer sr-only" 
-                  onChange={() => setSpectator(true)} 
+                <input
+                  type="radio"
+                  name="role"
+                  className="peer sr-only"
+                  onChange={() => setSpectator(true)}
                 />
                 <div className="w-5 h-5 border-2 border-gray-500 rounded-full peer-checked:border-purple-500 peer-checked:bg-purple-500 transition-all"></div>
               </div>

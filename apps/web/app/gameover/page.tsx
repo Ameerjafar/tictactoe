@@ -14,17 +14,17 @@ export default function GameOver() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const roomId = localStorage.getItem("roomId");
-    
+
     if (!token) {
       router.push("/signin");
       return;
     }
-    
+
     if (!roomId) {
       router.push("/room");
       return;
     }
-    
+
     const storedWinner = localStorage.getItem("winnerSymbol");
     const adminStatus = localStorage.getItem("isAdmin") === "true";
     setWinner(storedWinner);
@@ -32,7 +32,8 @@ export default function GameOver() {
   }, [router]);
 
   useEffect(() => {
-      if (messages?.type === "restartGame") {
+    if (messages && messages?.type === "restartGame") {
+      console.log("restart game is calling");
       localStorage.removeItem("winnerSymbol");
       const symbol: any = localStorage.getItem("symbol");
       if (symbol === "X") {
@@ -43,18 +44,10 @@ export default function GameOver() {
       setButtonText("X");
       router.push("/game");
     }
-  }, [messages, router, setButtonText]);
+  }, [messages]);
 
   const handlePlayAgain = () => {
     localStorage.removeItem("winnerSymbol");
-    
-    const symbol: any = localStorage.getItem("symbol");
-    if (symbol === "X") {
-      localStorage.setItem("symbol", "O");
-    } else if (symbol === "O") {
-      localStorage.setItem("symbol", "X");
-    }
-    setButtonText("X");
     const restartObject = {
       type: "restartGame",
       roomId: localStorage.getItem("roomId"),
@@ -65,11 +58,11 @@ export default function GameOver() {
       type: "updateGameState",
       roomId: localStorage.getItem("roomId"),
       symbol: ""
-    }; 
+    };
     sendMessage(gameStateObject);
-    
+
     router.push("/game");
-  }; 
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white">
@@ -77,16 +70,15 @@ export default function GameOver() {
         <h1 className="text-5xl font-extrabold mb-8 tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
           GAME OVER
         </h1>
-        
-        {winner ? (
+
+        {winner !== "D" ? (
           <div className="mb-8">
             <p className="text-xl text-gray-300 mb-4">The Winner is</p>
-            <div 
-              className={`text-8xl font-bold animate-bounce ${
-                winner === "X" 
-                  ? "text-blue-400 drop-shadow-[0_0_20px_rgba(59,130,246,0.8)]" 
-                  : "text-red-400 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
-              }`}
+            <div
+              className={`text-8xl font-bold animate-bounce ${winner === "X"
+                ? "text-blue-400 drop-shadow-[0_0_20px_rgba(59,130,246,0.8)]"
+                : "text-red-400 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]"
+                }`}
             >
               {winner}
             </div>

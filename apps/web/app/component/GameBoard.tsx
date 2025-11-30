@@ -51,9 +51,8 @@ export const GameBoard = () => {
         setButtonText((prev) => (prev === "X" ? "O" : "X"));
       }
     }
-
   }, [messages]);
-  const playSound = (type: "move" | "win") => {
+  const playSound = (type: "move" | "win" | "draw") => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -69,7 +68,7 @@ export const GameBoard = () => {
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
       oscillator.start();
       oscillator.stop(audioContext.currentTime + 0.1);
-    } else {
+    } else if (type === "win") {
       oscillator.type = "triangle";
       oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
       oscillator.frequency.linearRampToValueAtTime(659.25, audioContext.currentTime + 0.2);
@@ -78,6 +77,16 @@ export const GameBoard = () => {
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
       oscillator.start();
       oscillator.stop(audioContext.currentTime + 0.6);
+    } else {
+      // Draw sound - a descending tone sequence
+      oscillator.type = "sawtooth";
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.linearRampToValueAtTime(300, audioContext.currentTime + 0.2);
+      oscillator.frequency.linearRampToValueAtTime(200, audioContext.currentTime + 0.4);
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.5);
     }
   };
   useEffect(() => {
@@ -141,6 +150,12 @@ export const GameBoard = () => {
         return true;
       }
     });
+    const isDraw = ele.every((e) => e !== "");
+    if (isDraw && !isWon) {
+      playSound("draw");
+      localStorage.setItem("winnerSymbol", "D");
+      return true;
+    }
     return isWon;
   };
 
