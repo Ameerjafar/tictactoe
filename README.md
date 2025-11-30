@@ -6,11 +6,15 @@ A real-time multiplayer Tic-Tac-Toe game built with Next.js, WebSockets, and Pos
 
 <!-- Add your demo video or GIF here -->
 <!-- Example: -->
+
+https://github.com/user-attachments/assets/18889c8d-7c71-44d7-a9df-d27c6dea8230
+
+
 <!-- ![Demo](./demo.gif) -->
 <!-- Or embed a video: -->
 <!-- [![Demo Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID) -->
 
-**[Add your demo video/GIF here]**
+
 
 ## ✨ Features
 
