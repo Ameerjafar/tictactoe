@@ -24,7 +24,7 @@ wss.on("connection", (ws: WebSocket) => {
       gameManager.addUser(userObject);
       ws.send(
         JSON.stringify(
-          `room created successfully with ${userObject.roomId} and admin ${userObject.name}`
+          { ...objectData, twoPlayer: objectData.player ? 1 : 0 }
         )
       );
     }
@@ -56,20 +56,27 @@ wss.on("connection", (ws: WebSocket) => {
         userId: objectData.userId,
         type: objectData.type,
         gameState: objectData.symbol,
-        player: objectData.player
+        player: objectData.player,
       };
       gameManager.addUser(userObject);
       const getAllUser: any = gameManager.getUserByRoom({
         roomId: userObject.roomId,
       });
+      let twoPlayer = 0;
+      getAllUser.forEach((user: any) => {
+        if (user.player) {
+          twoPlayer++;
+        }
+      })
       console.log("this is getAllUser", getAllUser);
       if (getAllUser === -1) {
         ws.send(JSON.stringify("room does not have any member"));
       } else {
         getAllUser.forEach((user: any) => {
           console.log(user);
-          if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-            user.ws.send(JSON.stringify(`${objectData.name} joined the room`));
+          if (user.ws.readyState === WebSocket.OPEN) {
+            user.ws.send(JSON.stringify({ ...objectData, twoPlayer }));
+            console.log(JSON.stringify({ ...objectData, twoPlayer }))
           }
         });
       }
@@ -81,7 +88,7 @@ wss.on("connection", (ws: WebSocket) => {
       }
       const allUser: any = gameManager.getUserByRoom({ roomId });
       allUser.forEach((user: any) => {
-        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+        if (user.ws.readyState === WebSocket.OPEN) {
           user.ws.send(JSON.stringify(objectData));
         }
       });
@@ -109,10 +116,25 @@ wss.on("connection", (ws: WebSocket) => {
         }
       });
     }
+    if (objectData.type === 'closeRoom') {
+      const roomId = objectData.roomId;
+      const allUser: any = gameManager.getUserByRoom({ roomId });
+      allUser.forEach((user: any) => {
+        if (user.ws.readyState === WebSocket.OPEN) {
+          user.ws.send(JSON.stringify(objectData));
+        }
+      });
+
+      const removeRoom = gameManager.removeRooms({ roomId });
+      if (removeRoom === -1) {
+        ws.send(JSON.stringify("room does not exist"));
+      }
+    }
     console.log(`Received: ${message}`);
     // ws.send(JSON.stringify(objectData));
   });
   ws.on("close", () => {
+
     console.log("Client disconnected");
   });
   ws.on("error", (err: unknown) => {

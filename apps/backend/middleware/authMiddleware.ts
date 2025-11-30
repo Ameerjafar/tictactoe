@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "@repo/db";
-import { useReducer } from "react";
 export interface AuthRequest extends Request {
   userId?: string;
 }
@@ -12,7 +11,7 @@ export const authMiddleware = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
-
+  console.log("Inside the auth middleware")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     res.status(401).json({ message: "Unauthorized" });
     return;
@@ -23,21 +22,23 @@ export const authMiddleware = async (
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET! || "secret") as {
       userId: string;
     };
+    console.log("decoded", decoded)
     const findUser = await prisma.user.findUnique({
       where: {
         id: decoded.userId,
       },
     });
+
     if (!findUser) {
       return res.status(404).json({ message: "user is not found in the db" });
     }
     req.userId = decoded.userId;
-
+    console.log("it is fine")
     next();
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(403).json({ message: "Invalid token" });
     return;
   }

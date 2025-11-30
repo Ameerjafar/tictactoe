@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 type Turn = "X" | "O";
 interface GameState {
-  currentState: ["","","","","","","","",""];
+  currentState: ["", "", "", "", "", "", "", "", ""];
 }
 interface User {
   ws: WebSocket;
@@ -71,5 +71,14 @@ export class GameManager {
       return -1;
     }
     return getAllUser;
+  };
+  removeRooms = ({ roomId }: { roomId: string }) => {
+
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      console.log("room does not exist");
+      return -1;
+    }
+    this.rooms.delete(roomId);
   };
 }

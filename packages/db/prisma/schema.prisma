@@ -27,13 +27,10 @@ model User {
 }
 
 model Game {
-  id            String   @id @default(uuid())
-  roomId        String   @unique
-  player1       String
-  player2       String
-  userId        String
-  totalRounds   Int
-  roomWinner String
-  user          User     @relation(fields: [userId], references: [id])
-  createdAt     DateTime @default(now())
+  id          String   @id @default(uuid())
+  roomId      String
+  userId      String
+  isWin       Boolean 
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }

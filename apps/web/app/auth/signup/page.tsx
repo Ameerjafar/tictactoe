@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from 'axios';
-import jwt from 'jsonwebtoken';
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -13,28 +12,23 @@ export default function Signup() {
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
+    console.log("hello");
     e.preventDefault();
     setError("");
+
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
         name,
         email,
         password
       });
+      console.log(res);
       console.log(res.data);
-      const data = await res.data;
-      if (data && data.token) {
-        localStorage.setItem("token", data.token);
-        const decoded: any = jwt.decode(data.token);
-        if (decoded) {
-          if (decoded.userId) localStorage.setItem("userId", decoded.userId);
-          if (decoded.name) localStorage.setItem("name", decoded.name);
-          if (decoded.email) localStorage.setItem("email", decoded.email);
-        }
-
-        router.push("/room");
+      console.log("working ")
+      if (res.data) {
+        router.push("/auth/signin");
       } else {
-        setError(data.message || "Signup failed");
+        setError(res.data?.message || "Signup failed");
       }
     } catch (err: unknown) {
       setError("Something went wrong");

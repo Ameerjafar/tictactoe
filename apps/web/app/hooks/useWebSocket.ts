@@ -43,6 +43,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
       console.log("WebSocket closed");
       setIsConnected(false);
       setSocket(null);
+      localStorage.removeItem("twoPlayer");
       if (reconnectAttempts.current < maxReconnects) {
         const delay = Math.min(1000 * 2 ** reconnectAttempts.current, 30000);
         setTimeout(() => {

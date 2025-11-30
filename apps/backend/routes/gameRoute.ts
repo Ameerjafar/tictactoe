@@ -3,11 +3,22 @@ import type { Request, Response } from "express";
 import { prisma } from "@repo/db";
 import { authMiddleware } from "../middleware/authMiddleware";
 export const gameRoute = express.Router();
+
+
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
+}
+
 gameRoute.get(
-  "userstats",
+  "/userstats",
   authMiddleware,
   async (req: Request, res: Response) => {
-    const { userId } = req.body;
+    const userId = req.userId;
+    console.log("userId", userId)
     try {
       if (!userId) {
         return res.status(400).json({ message: "you did not mention the Id" });
@@ -49,15 +60,40 @@ gameRoute.get("/gamehistory", async (req: Request, res: Response) => {
   }
 });
 
+gameRoute.get(
+  "/usergames",
+  authMiddleware,
+  async (req: Request, res: Response) => {
+    const userId = req.userId;
+    try {
+      if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+      }
+      const games = await prisma.game.findMany({
+        where: {
+          userId: userId as string,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 20, // Limit to last 20 games
+      });
+      return res.status(200).json({ games });
+    } catch (error: unknown) {
+      console.error("Error fetching user games:", error);
+      return res.status(500).json({ error });
+    }
+  }
+);
+
 gameRoute.post(
   "/creategame",
   authMiddleware,
   async (req: Request, res: Response) => {
-    //   const { userId } = req.query;
-    const { roomId, player1, player2, roomWinner, totalRounds, userId } =
-      req.body;
+    const userId = req.userId;
+    const { roomId, isWin, isDraw } = req.body;
     try {
-      if (!roomId || !player1 || !player2) {
+      if (!roomId || !userId) {
         return res
           .status(400)
           .json({ message: "you was not passed all the required data" });
@@ -67,24 +103,36 @@ gameRoute.post(
           id: userId as string,
         },
       });
-      if (isUserExist) {
+      if (!isUserExist) {
         return res
           .status(404)
           .json({ message: "cannot find the user in the db" });
       }
-      const createGame = await prisma.game.create({
-        data: {
-          userId: userId as string,
-          roomId,
-          player1,
-          player2,
-          roomWinner,
-          totalRounds,
-        },
-      });
+
+      // Use a transaction to ensure both game creation and user stats update happen or fail together
+      const [createGame, updateUser] = await prisma.$transaction([
+        prisma.game.create({
+          data: {
+            userId,
+            isWin: !!isWin, // Ensure boolean
+            roomId,
+          },
+        }),
+        prisma.user.update({
+          where: { id: userId },
+          data: {
+            totalGames: { increment: 1 },
+            wins: isWin ? { increment: 1 } : undefined,
+            losses: !isWin && !isDraw ? { increment: 1 } : undefined,
+            draws: isDraw ? { increment: 1 } : undefined,
+          },
+        }),
+      ]);
+
       console.log("createGame", createGame);
-      return res.status(201).json({ gameCreated: createGame });
+      return res.status(201).json({ gameCreated: createGame, userStats: updateUser });
     } catch (error: unknown) {
+      console.error("Error creating game:", error);
       return res.status(500).json({ error });
     }
   }
@@ -94,11 +142,11 @@ gameRoute.post(
   authMiddleware,
   async (req: Request, res: Response) => {
     //   const { userId } = req.query as { userId: string };
-    const { userId, win, lose, draw } = req.body as {
+    const userId = req.userId;
+    const { win, lose, draw } = req.body as {
       win?: number;
       lose?: number;
       draw?: number;
-      userId: string;
     };
 
     try {

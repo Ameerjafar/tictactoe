@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import { toast } from "sonner";
+import { measureMemory } from "vm";
 type ButtonType = "X" | "O";
 export const GameBoard = () => {
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -51,6 +52,9 @@ export const GameBoard = () => {
         setButtonText((prev) => (prev === "X" ? "O" : "X"));
       }
     }
+    if (messages.type === 'joinRoom' || messages.type === 'createRoom') {
+      localStorage.setItem("twoPlayer", messages.twoPlayer.toString());
+    }
   }, [messages]);
   const playSound = (type: "move" | "win" | "draw") => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -96,9 +100,13 @@ export const GameBoard = () => {
     }
   }, [ele])
   const buttonHandler = (key: number) => {
-
+    const twoPlayer = localStorage.getItem("twoPlayer");
     if (localStorage.getItem("spectator") === "true") {
       toast.info("You are in spectator mode");
+      return;
+    }
+    if (twoPlayer !== "2") {
+      toast.info("Wait for another player to join");
       return;
     }
     if (symbol && symbol !== buttonText) {
