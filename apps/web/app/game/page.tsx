@@ -10,7 +10,14 @@ export default function GamePage() {
   const [roomId, setRoomId] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const storedRoomId = localStorage.getItem("roomId");
+    
+    if (!token) {
+      router.push("/signin");
+      return;
+    }
+    
     if (!storedRoomId) {
       router.push("/room");
     } else {

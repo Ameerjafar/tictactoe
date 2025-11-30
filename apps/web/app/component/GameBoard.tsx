@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import { toast } from "sonner";
 type ButtonType = "X" | "O";
-export const GameBoard = () => {  
+export const GameBoard = () => {
   const elements = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const [buttonText, setButtonText] = useState<ButtonType>("X");
   const router = useRouter();
-  const [ turn, setTurn ] = useState<boolean>(true);
+  // const [turn, setTurn] = useState<boolean>(true);
   const { messages, sendMessage } = useWebSocketContext();
   const symbol = localStorage.getItem("symbol");
   const [ele, setEle] = useState<string[]>([
@@ -32,26 +32,22 @@ export const GameBoard = () => {
     [0, 4, 8],
     [2, 4, 6],
   ];
+  // useEffect(() => {
+  //   const round = localStorage.getItem("currentRound");
+  //   console.log("turn inside the button text", buttonText)
+  //   console.log("turn", turn);
+  //   if ((parseInt(round!) & 1) === 1 && symbol === "X") {
+  //     setTurn(true);
+  //   }
+  //   else {
+  //     setTurn(false);
+  //   }
+  // }, [])
   useEffect(() => {
-    const round = localStorage.getItem("currentRound"); 
-    console.log("turn inside the button text", buttonText)
-    console.log("turn", turn);
-    if((parseInt(round!) & 1) === 1 && symbol === "X") {
-      setTurn(true);
-    }
-    else {
-      setTurn(false);
-    }
-  }, [])
-  useEffect(() => {
-    if(messages.type === 'fewerPlayer') {
-
-      console.log("this is not working good");
-      toast.info("We need two Player to start this game");
-    }
-    else if(messages.type === 'updateGameState' && messages.gameState) {
+    console.log("inside the message thing", messages);
+    if (messages && messages.type === 'updateGameState' && messages.gameState) {
       setEle(messages.gameState);
-      if(messages.symbol != "") {
+      if (messages.symbol != "") {
         setButtonText((prev) => (prev === "X" ? "O" : "X"));
       }
     }
@@ -86,17 +82,17 @@ export const GameBoard = () => {
   };
   useEffect(() => {
     const gameOver = isGameOver();
-    if(gameOver) {
+    if (gameOver) {
       router.push('/gameover');
     }
   }, [ele])
   const buttonHandler = (key: number) => {
-    
-    if(localStorage.getItem("spectator") === "true") {
+
+    if (localStorage.getItem("spectator") === "true") {
       toast.info("You are in spectator mode");
       return;
     }
-    if(symbol && symbol !== buttonText) {
+    if (symbol && symbol !== buttonText) {
       toast.info("Not your turn!");
       return;
     }
@@ -115,17 +111,17 @@ export const GameBoard = () => {
     console.log("what is wrong in this one", updateEle);
     const gameOver = isGameOver();
     let player = false;
-    if(localStorage.getItem("spectator") !== "true") {
+    if (localStorage.getItem("spectator") !== "true") {
       player = true;
     }
     const object = {
-        gameState: updateEle,
-        type: "updateGameState",
-        roomId: localStorage.getItem("roomId"),
-        symbol,
-        gameOver,
-        player
-      };
+      gameState: updateEle,
+      type: "updateGameState",
+      roomId: localStorage.getItem("roomId"),
+      symbol,
+      gameOver,
+      player
+    };
     sendMessage(object);
     setButtonText((prev) => (prev === "X" ? "O" : "X"));
   };
@@ -159,28 +155,24 @@ export const GameBoard = () => {
                 className={`
                   w-24 h-24 sm:w-32 sm:h-32 rounded-lg text-4xl sm:text-6xl font-bold transition-all duration-300 ease-in-out
                   flex items-center justify-center shadow-md
-                  ${
-                    ele[index] === ""
-                      ? "bg-white/5 hover:bg-white/20 cursor-pointer hover:scale-105"
-                      : "cursor-not-allowed"
+                  ${ele[index] === ""
+                    ? "bg-white/5 hover:bg-white/20 cursor-pointer hover:scale-105"
+                    : "cursor-not-allowed"
                   }
-                  ${
-                    ele[index] === "X"
-                      ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-                      : ""
+                  ${ele[index] === "X"
+                    ? "bg-blue-500/20 text-blue-400 border-2 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                    : ""
                   }
-                  ${
-                    ele[index] === "O"
-                      ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
-                      : ""
+                  ${ele[index] === "O"
+                    ? "bg-red-500/20 text-red-400 border-2 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                    : ""
                   }
                 `}
-                disabled={ele[index] !== "" && symbol === buttonText }
+                disabled={ele[index] !== "" && symbol === buttonText}
               >
                 <span
-                  className={`transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                    ele[index] ? "scale-100 opacity-100 rotate-0" : "scale-0 opacity-0 rotate-180"
-                  }`}
+                  className={`transform transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${ele[index] ? "scale-100 opacity-100 rotate-0" : "scale-0 opacity-0 rotate-180"
+                    }`}
                 >
                   {ele[index]}
                 </span>

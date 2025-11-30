@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 export interface UseWebSocketReturn {
@@ -13,10 +14,19 @@ export const useWebSocket = (): UseWebSocketReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const reconnectAttempts = useRef(0);
   const maxReconnects = 5;
+  const router = useRouter();
 
   const connect = useCallback(() => {
-    const ws = new WebSocket("ws://localhost:8080");
-    
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    console.log("token", token);
+    if (!token) {
+      console.log("No token found");
+      router.push("/auth/signin");
+      return;
+    }
+
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSOCKET_URL}`);
+
     ws.onopen = () => {
       console.log("WebSocket connected");
       setIsConnected(true);
@@ -47,7 +57,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
     };
 
     return ws;
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const ws = connect();
@@ -58,7 +68,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
 
   const sendMessage = useCallback((data: any) => {
     if (socket && isConnected) {
-        console.log(data);
+      console.log(data);
       socket.send(JSON.stringify(data));
     }
   }, [socket, isConnected]);

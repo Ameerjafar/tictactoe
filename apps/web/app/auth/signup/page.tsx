@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BACKEND_URL } from "../config";
 import Link from "next/link";
-
-import { parseJwt } from "../utils/jwt";
+import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -17,27 +16,27 @@ export default function Signup() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password }),
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
+        name,
+        email,
+        password
       });
-      const data = await res.json();
-      if (res.ok) {
+      console.log(res.data);
+      const data = await res.data;
+      if (data && data.token) {
         localStorage.setItem("token", data.token);
-        const decoded = parseJwt(data.token);
+        const decoded: any = jwt.decode(data.token);
         if (decoded) {
-          localStorage.setItem("userId", decoded.userId);
-          localStorage.setItem("name", decoded.name);
-          localStorage.setItem("email", decoded.email);
+          if (decoded.userId) localStorage.setItem("userId", decoded.userId);
+          if (decoded.name) localStorage.setItem("name", decoded.name);
+          if (decoded.email) localStorage.setItem("email", decoded.email);
         }
+
         router.push("/room");
       } else {
         setError(data.message || "Signup failed");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError("Something went wrong");
     }
   };

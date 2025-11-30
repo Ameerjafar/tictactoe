@@ -17,7 +17,10 @@ const signinSchema = z.object({
 
 export const signupController = async (req: Request, res: Response) => {
   try {
+    console.log(req.body)
     const parsedBody = signupSchema.safeParse(req.body);
+    // console.log(parsedBody);
+    // console.log(parsedBody.success)
     if (!parsedBody.success) {
       res
         .status(400)

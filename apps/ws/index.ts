@@ -1,8 +1,9 @@
 import WebSocket from "ws";
 import { GameManager } from "./GameManager";
-
 const PORT = 8080;
-const wss = new WebSocket.Server({ port: PORT });
+const wss = new WebSocket.Server({
+  port: PORT,
+});
 const gameManager = new GameManager();
 wss.on("connection", (ws: WebSocket) => {
   console.log("New client connected");
@@ -26,16 +27,16 @@ wss.on("connection", (ws: WebSocket) => {
           `room created successfully with ${userObject.roomId} and admin ${userObject.name}`
         )
       );
-    } 
-    else if(objectData.type === 'message') {
+    }
+    else if (objectData.type === 'message') {
       const message = objectData.message;
-      const allUser: any = gameManager.getUserByRoom({roomId: objectData.roomId});
-      if(allUser === -1) {
+      const allUser: any = gameManager.getUserByRoom({ roomId: objectData.roomId });
+      if (allUser === -1) {
         ws.send(JSON.stringify("we cannot find this room"));
         return;
       }
       allUser.forEach((user: any) => {
-        if(user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
           console.log("inside the user handler");
           const object = {
             type: "message",
@@ -76,55 +77,27 @@ wss.on("connection", (ws: WebSocket) => {
       console.log("inside the update game state");
       const roomId = objectData.roomId;
       if (!roomId) {
-        ws.send(JSON.stringify("we cannot find the roomId"));
+        return ws.send(JSON.stringify("we cannot find the roomId"));
       }
-      // else if (!objectData.player) {
-      //   ws.send(
-      //     JSON.stringify(
-      //       "spectator"
-      //     )
-      //   );
-
-      // }
-      else {
-        const allUser: any = gameManager.getUserByRoom({ roomId });
-        let totalPlayers = 0;
-        allUser.forEach((user: any) => {
-          if(user.player) {
-            totalPlayers++;
-          }
-        })
-        if(totalPlayers === 2) {
-          allUser.forEach((user: any) => {
-          if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
-            user.ws.send(JSON.stringify(objectData));
-          }
-        });
+      const allUser: any = gameManager.getUserByRoom({ roomId });
+      allUser.forEach((user: any) => {
+        if (user.ws !== ws && user.ws.readyState === WebSocket.OPEN) {
+          user.ws.send(JSON.stringify(objectData));
         }
-        else {
-          allUser.forEach((user: any) => {
-            console.log("Inside the fewer player");
-              const fewerPlayer = {
-                type: "fewerPlayer",
-                roomId: user.roomId
-              }      
-              user.ws.send(JSON.stringify(fewerPlayer));
-          })
-        }
-      }
-    } else if (objectData.type === "restartGame") {
+      });
+    }
+    if (objectData.type === "restartGame") {
       console.log("Admin restarting game");
       const roomId = objectData.roomId;
       if (!roomId) {
         ws.send(JSON.stringify("we cannot find the roomId"));
-      } else {
-        const allUser: any = gameManager.getUserByRoom({ roomId });
-        allUser.forEach((user: any) => {
-          if (user.ws.readyState === WebSocket.OPEN) {
-            user.ws.send(JSON.stringify(objectData));
-          }
-        });
       }
+      const allUser: any = gameManager.getUserByRoom({ roomId });
+      allUser.forEach((user: any) => {
+        if (user.ws.readyState === WebSocket.OPEN) {
+          user.ws.send(JSON.stringify(objectData));
+        }
+      });
     }
     if (objectData.gameOver === true) {
       console.log("backend game over", objectData.gameOver);

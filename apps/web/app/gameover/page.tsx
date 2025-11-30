@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import { useButtonText } from "../context/ButtonTextContext";
+
 export default function GameOver() {
   const [winner, setWinner] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -11,11 +12,24 @@ export default function GameOver() {
   const router = useRouter();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const roomId = localStorage.getItem("roomId");
+    
+    if (!token) {
+      router.push("/signin");
+      return;
+    }
+    
+    if (!roomId) {
+      router.push("/room");
+      return;
+    }
+    
     const storedWinner = localStorage.getItem("winnerSymbol");
     const adminStatus = localStorage.getItem("isAdmin") === "true";
     setWinner(storedWinner);
     setIsAdmin(adminStatus);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
       if (messages?.type === "restartGame") {

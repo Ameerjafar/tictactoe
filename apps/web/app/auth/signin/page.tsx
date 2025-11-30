@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BACKEND_URL } from "../config";
 import Link from "next/link";
-
-import { parseJwt } from "../utils/jwt";
+import axios from "axios";
+import jwt from 'jsonwebtoken';
 
 export default function Signin() {
   const [email, setEmail] = useState("");
@@ -16,22 +15,23 @@ export default function Signin() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/signin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signin`, {
+        email,
+        password,
       });
-      const data = await res.json();
-      if (res.ok) {
+      console.log(res.data)
+      const data = await res.data;
+      if (data && data.token) {
         localStorage.setItem("token", data.token);
-        const decoded = parseJwt(data.token);
+
+        // Decode JWT to extract user data (no verification on client-side)
+        const decoded: any = jwt.decode(data.token);
         if (decoded) {
-          localStorage.setItem("userId", decoded.userId);
-          localStorage.setItem("name", decoded.name);
-          localStorage.setItem("email", decoded.email);
+          if (decoded.userId) localStorage.setItem("userId", decoded.userId);
+          if (decoded.name) localStorage.setItem("name", decoded.name);
+          if (decoded.email) localStorage.setItem("email", decoded.email);
         }
+
         router.push("/room");
       } else {
         setError(data.message || "Signin failed");
@@ -44,11 +44,15 @@ export default function Signin() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-2xl border border-white/20 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6 text-white">Sign In</h1>
+        <h1 className="text-3xl font-bold text-center mb-6 text-white">
+          Sign In
+        </h1>
         {error && <p className="text-red-400 text-center mb-4">{error}</p>}
         <form onSubmit={handleSignin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Email
+            </label>
             <input
               type="email"
               value={email}
@@ -59,7 +63,9 @@ export default function Signin() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Password
+            </label>
             <input
               type="password"
               value={password}
@@ -78,7 +84,7 @@ export default function Signin() {
         </form>
         <p className="mt-4 text-center text-gray-400">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-blue-400 hover:underline">
+          <Link href="/auth/signup" className="text-blue-400 hover:underline">
             Sign Up
           </Link>
         </p>

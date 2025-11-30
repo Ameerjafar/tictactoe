@@ -2,10 +2,10 @@ import express, { Router } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { routes } from "./routes/routes";
-import { connectRedis } from "./inmemory/redis";
+// import { connectRedis } from "./inmemory/redis";
 dotenv.config();
 
-connectRedis();
+// connectRedis(); 
 const app = express();
 app.use(cors());
 app.use(express.json());
